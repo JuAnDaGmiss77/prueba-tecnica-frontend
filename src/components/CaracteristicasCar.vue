@@ -65,7 +65,4 @@
         margin-top: 66px;
         margin-bottom: 66px;
     }
-    .img-articulo{
-        
-    }
 </style>
