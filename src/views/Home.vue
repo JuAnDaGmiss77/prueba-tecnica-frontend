@@ -1,9 +1,14 @@
 <script setup>
-
+import FormShopCarVue from '../components/FormShopCar.vue';
+import SectionVue from '../components/Section.vue';
+import CaracteristicasCar from '../components/CaracteristicasCar.vue'
 </script>
 
 <template>
     <div>
-        <h1>hla mundo</h1>
+        <form-shop-car-vue/>
+        <section-vue/>
+        <caracteristicas-car/>
+        
     </div>
 </template>
