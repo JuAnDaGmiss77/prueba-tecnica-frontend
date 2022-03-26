@@ -56,8 +56,9 @@
 </template>
 
 <style scoped>
+
 .body {
-    height: 100vh;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -69,8 +70,10 @@
 
 .container-form {
     width: 100%;
-    height: 100vh;
+    height: 100%;
     transition: all 0.5s ease-out;
+    padding-bottom: 10px;
+    margin-top: 10px;
 }
 
 .formulario {
