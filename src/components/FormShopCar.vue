@@ -1,6 +1,10 @@
 <script>
 import useVuelidate from '@vuelidate/core'
-import { required, email, minLength,integer,not } from '@vuelidate/validators'
+import { required, email, minLength,integer,maxLength} from '@vuelidate/validators'
+import Swal from 'sweetalert2'
+
+import 'sweetalert2/dist/sweetalert2.min.css';
+import axios from 'axios'
 
 
 export function validName(name) {
@@ -22,13 +26,28 @@ export default {
     return {
       form: {
         modelo: '',
-        nombreCompleto: '',
+        nombre_completo: '',
         email: '',
-        numCelular: '',
+        numero_celular: 0,
         departamento: '',
         ciudad:'',
         acceptTerminos:''
       },
+      departamentos: [
+          {
+          id:1,
+          nombre:"Antioquia"
+          },
+          {
+          id:3,
+          nombre:"Bogota DC"
+          },
+
+        ],
+        ciudades: {
+            nombre:''
+        }
+           
       
     }
   },
@@ -36,7 +55,7 @@ export default {
   validations() {
     return {
       form: {
-        nombreCompleto: { 
+        nombre_completo: { 
           required,min: minLength(5),name_validation: {
             $validator: validName,
             $message: 'Ingrese un nombre valido, no deje espacios ni al inicio ni final'
@@ -44,12 +63,52 @@ export default {
         },
         modelo:{required},
         email: { required, email },
-        numCelular: {required, min: minLength(10), integer},
-        //departamento: {required},
-        //ciudad:{required}
+        numero_celular: {required, min: minLength(10), max: maxLength(10) , integer},
+        departamento: {required},
+        ciudad:{required}
       },
       
     }
+  },
+  methods: {
+      actualizarCiudades(){
+          if(this.form.departamento == 'Antioquia'){
+              this.ciudades.nombre = 'Medellin'
+          }
+          if (this.form.departamento == 'Bogota DC') {
+              this.ciudades.nombre = 'Bogota'
+          }
+      },
+      async enviarCotizacion(){
+          if (this.form.acceptTerminos == false) {
+             return Swal.fire({
+                icon: 'warning',
+                title: 'Oops...',
+                text: 'Necesitas aceptar los tratamientos de datos personales',
+            })
+          }
+          try {
+              const response =  await axios.post('http://127.0.0.1:8000/api/quote',this.form);
+              if (response.data.success == true) {
+                return Swal.fire({
+                    icon: 'success',
+                    title: response.data.message,
+                })
+              }
+              if (response.data.success == false) {
+                return Swal.fire({
+                    icon: 'warning',
+                    title: response.data.message,
+                    text: 'intentelo despues'
+                })
+              }
+          } catch (error) {
+              return Swal.fire({
+                    icon: 'error',
+                    title: 'Ha ocurrido un error en el servidor',
+                })
+          }
+      }
   },
 }
 </script>
@@ -75,8 +134,8 @@ export default {
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Nombre completo</label>
-                        <input v-model="v$.form.nombreCompleto.$model" type="text" class="form-control" />
-                        <div v-for="(error, index) of v$.form.nombreCompleto.$errors" :key="index">
+                        <input v-model="v$.form.nombre_completo.$model" type="text" class="form-control" />
+                        <div v-for="(error, index) of v$.form.nombre_completo.$errors" :key="index">
                             <span>{{ error.$message }}</span>
                         </div>
                     </div>
@@ -91,36 +150,35 @@ export default {
 
                     <div class="mb-3">
                         <label class="form-label">Numero celular</label>
-                        <input v-model="v$.form.numCelular.$model" type="text" class="form-control" />
-                        <div v-for="(error, index) of v$.form.numCelular.$errors" :key="index">
+                        <input v-model="v$.form.numero_celular.$model" type="number" class="form-control" />
+                        <div v-for="(error, index) of v$.form.numero_celular.$errors" :key="index">
                             <span>{{ error.$message }}</span>
                         </div>
                     </div>
                     <div class="mb-3 row">
                         <div class="col-6">
                             <label class="form-label">Departamento</label>
-                            <select class="form-select">
-                                <option value>prueba</option>
-                                <option value>prueba</option>
+                            <select @change="actualizarCiudades()" v-model="v$.form.departamento.$model"   class="form-select">
+                                <option disabled value="">Seleccione un departamento</option>
+                                <option v-for="departamento in departamentos" :key="departamento.id" :value="departamento.nombre">{{departamento.nombre}}</option>
                             </select>
                         </div>
-
                         <div class="col-6">
                             <label class="form-label">Ciudad</label>
-                            <select class="form-select">
-                                <option value>prueba</option>
-                                <option value>prueba</option>
+                            <select v-model="v$.form.ciudad.$model" v-if="form.departamento != ''" class="form-select">
+                                <option disabled value="">Seleccione una ciudad</option>
+                                <option :value="ciudades.nombre">{{ciudades.nombre}}</option>
                             </select>
                         </div>
                     </div>
                     <div class="form-check mb-3">
                         <input v-model="form.acceptTerminos" class="form-check-input" type="checkbox" value="form.acceptTerminos" id="flexCheckDefault" />
-                        <label class="form-check-label" for="flexCheckDefault">Acepto la politica de <a href="">Tratamiento de datos personales</a></label>
-                        {{form.acceptTerminos}}
+                        <label class="form-check-label" for="flexCheckDefault">Acepto la politica de <a target="_blank" href="https://cdnprocessoft.s3.amazonaws.com/SITIOS/XuQlxMLqjS_vGRUP1rcXyNlDKh3dwzcsokrQU-C0s2w/files/PTDP%20-%20PROCESSOFT%20S%20A%20S.pdf">Tratamiento de datos personales</a></label>
+                        
                     </div>
 
-                    <button :disabled="v$.form.$invalid" type="submit" class="btn btn-dark">Enviar datos</button>
-                    {{v$.form.$invalid}}
+                    <button @click="enviarCotizacion()" :disabled="v$.form.$invalid" type="submit" class="btn btn-dark">Enviar datos</button>
+                    
                 </form>
             </div>
         </div>
